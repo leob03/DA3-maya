@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import os
+import ssl
+import urllib.error
 import urllib.request
 from pathlib import Path
 from types import SimpleNamespace
@@ -52,6 +54,7 @@ def get_model_path(model_name: str, model_folder: str | None = None) -> Path:
 
 
 def download_model(model_name: str, model_folder: str | None = None, progress=None) -> Path:
+    prepend_dependency_paths()
     if model_name not in MODEL_URLS:
         raise ValueError(f"Unknown DA3 model: {model_name}")
     path = get_model_path(model_name, model_folder)
@@ -62,21 +65,40 @@ def download_model(model_name: str, model_folder: str | None = None, progress=No
     url = MODEL_URLS[model_name]
     tmp_path = path.with_suffix(path.suffix + ".part")
 
-    with urllib.request.urlopen(url) as response:
-        total = int(response.info().get("Content-Length", -1))
-        done = 0
-        with open(tmp_path, "wb") as fh:
-            while True:
-                chunk = response.read(1024 * 1024)
-                if not chunk:
-                    break
-                fh.write(chunk)
-                done += len(chunk)
-                if progress and total > 0:
-                    progress(done / total)
+    context = _download_ssl_context()
+    try:
+        with urllib.request.urlopen(url, context=context) as response:
+            total = int(response.info().get("Content-Length", -1))
+            done = 0
+            with open(tmp_path, "wb") as fh:
+                while True:
+                    chunk = response.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    fh.write(chunk)
+                    done += len(chunk)
+                    if progress and total > 0:
+                        progress(done / total)
+    except urllib.error.URLError as exc:
+        if tmp_path.exists():
+            tmp_path.unlink()
+        raise RuntimeError(
+            f"Failed to download {model_name} from Hugging Face: {exc}. "
+            "If this is an SSL certificate error in Maya, install dependencies first "
+            "so certifi is available, then restart Maya and try again."
+        ) from exc
 
     tmp_path.replace(path)
     return path
+
+
+def _download_ssl_context():
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
 
 
 def unload_model() -> None:
