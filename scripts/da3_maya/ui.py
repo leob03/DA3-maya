@@ -7,6 +7,7 @@ import traceback
 
 from .dependencies import check as check_dependencies
 from .dependencies import install as install_dependencies
+from .dependencies import latest_install_log_path
 from .model import MODEL_URLS, download_model, get_model_path, run_inference, unload_model
 from .processing import collect_image_paths, prediction_to_dict, source_stem
 from .maya_scene import import_prediction
@@ -32,6 +33,7 @@ def show():
     status = cmds.text(label=_dependency_status_label(), align="left")
     cmds.button(label="Check Dependencies", command=lambda *_: _set_status_text(status, _dependency_status_label()))
     cmds.button(label="Install Dependencies", command=lambda *_: _install(status))
+    cmds.button(label="Print Latest Install Log Path", command=lambda *_: _print_latest_install_log(status))
     cmds.setParent("..")
     cmds.setParent("..")
 
@@ -148,10 +150,17 @@ def _browse_folder(control) -> None:
 def _install(status_control) -> None:
     from maya import cmds
 
-    _set_status_text(status_control, "Installing dependencies. Watch the Script Editor for logs...")
+    _set_status_text(status_control, "Installing dependencies. A log file will be written under install_logs/ ...")
     cmds.refresh()
     ok, message = install_dependencies()
-    _set_status_text(status_control, "Dependencies: OK" if ok else f"Dependencies install failed\n{message}")
+    _set_status_text(status_control, "Dependencies: OK\n" + message if ok else f"Dependencies install failed\n{message}")
+
+
+def _print_latest_install_log(status_control) -> None:
+    log_path = latest_install_log_path()
+    message = f"Latest install log: {log_path}" if log_path else "No install log found yet."
+    print(f"[DA3 Maya] {message}")
+    _set_status_text(status_control, message)
 
 
 def _download(model_menu, model_folder_control, status_control) -> None:
