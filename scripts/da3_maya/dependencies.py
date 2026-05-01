@@ -25,7 +25,7 @@ def check() -> tuple[bool, str]:
     """Return whether the required runtime imports are available."""
     prepend_dependency_paths()
     missing = []
-    for module_name in ("torch", "numpy", "cv2", "safetensors", "depth_anything_3"):
+    for module_name in ("torch", "numpy", "cv2", "safetensors", "evo", "depth_anything_3.api"):
         try:
             __import__(module_name)
         except Exception as exc:
