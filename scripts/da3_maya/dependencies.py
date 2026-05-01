@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 from datetime import datetime
+from pathlib import Path
 
 from .paths import DA3_REPO_DIR, DEPS_DA3_DIR, DEPS_PUBLIC_DIR, INSTALL_LOG_DIR, REQUIREMENTS_MACOS_TXT, REQUIREMENTS_TXT
 
@@ -39,6 +40,35 @@ def selected_requirements_file():
     if platform.system() == "Darwin" and REQUIREMENTS_MACOS_TXT.exists():
         return REQUIREMENTS_MACOS_TXT
     return REQUIREMENTS_TXT
+
+
+def package_python_executable() -> str:
+    """Return the mayapy/python executable that should run pip installs."""
+    exe = Path(sys.executable)
+    exe_name = exe.name.lower()
+    if exe_name.startswith("mayapy") or exe_name.startswith("python"):
+        return os.fspath(exe)
+
+    candidates = []
+    maya_location = os.environ.get("MAYA_LOCATION")
+    if maya_location:
+        root = Path(maya_location)
+        candidates.extend([root / "bin" / "mayapy", root / "bin" / "mayapy.exe"])
+
+    # macOS GUI Maya often reports .../Maya.app/Contents/MacOS/Maya.
+    for parent in exe.parents:
+        if parent.name == "Contents":
+            candidates.append(parent / "bin" / "mayapy")
+            break
+
+    # Windows/Linux installs commonly place mayapy near the Maya binary.
+    candidates.extend([exe.with_name("mayapy"), exe.with_name("mayapy.exe")])
+
+    for candidate in candidates:
+        if candidate.exists():
+            return os.fspath(candidate)
+
+    return os.fspath(exe)
 
 
 def install_log_path():
@@ -82,9 +112,11 @@ def install() -> tuple[bool, str]:
     try:
         with open(log_path, "w", encoding="utf-8") as log_file:
             requirements_file = selected_requirements_file()
+            package_python = package_python_executable()
             log_file.write("DA3 Maya dependency install\n")
             log_file.write(f"Platform: {platform.platform()}\n")
-            log_file.write(f"Python executable: {sys.executable}\n")
+            log_file.write(f"Maya sys.executable: {sys.executable}\n")
+            log_file.write(f"Package Python executable: {package_python}\n")
             log_file.write(f"Python version: {sys.version}\n")
             log_file.write(f"Requirements: {requirements_file}\n")
             log_file.write(f"deps_public: {DEPS_PUBLIC_DIR}\n")
@@ -110,10 +142,10 @@ def install() -> tuple[bool, str]:
             DEPS_PUBLIC_DIR.mkdir(parents=True, exist_ok=True)
             DEPS_DA3_DIR.mkdir(parents=True, exist_ok=True)
 
-            _run_logged([sys.executable, "-m", "ensurepip", "--upgrade"], log_file)
+            _run_logged([package_python, "-m", "ensurepip", "--upgrade"], log_file)
             _run_logged(
                 [
-                    sys.executable,
+                    package_python,
                     "-m",
                     "pip",
                     "install",
@@ -130,7 +162,7 @@ def install() -> tuple[bool, str]:
             DEPS_DA3_DIR.mkdir(parents=True, exist_ok=True)
             _run_logged(
                 [
-                    sys.executable,
+                    package_python,
                     "-m",
                     "pip",
                     "install",
