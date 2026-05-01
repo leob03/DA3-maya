@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.venv/
+deps_public/
+deps_da3/
+da3_repo/
+models/
