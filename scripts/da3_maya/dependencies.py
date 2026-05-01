@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import os
+import platform
 import shutil
 import subprocess
 import sys
 
-from .paths import DA3_REPO_DIR, DEPS_DA3_DIR, DEPS_PUBLIC_DIR, REQUIREMENTS_TXT
+from .paths import DA3_REPO_DIR, DEPS_DA3_DIR, DEPS_PUBLIC_DIR, REQUIREMENTS_MACOS_TXT, REQUIREMENTS_TXT
 
 
 def prepend_dependency_paths() -> None:
@@ -32,6 +33,13 @@ def check() -> tuple[bool, str]:
     return True, "Dependencies are available."
 
 
+def selected_requirements_file():
+    """Return the requirements file for the current platform."""
+    if platform.system() == "Darwin" and REQUIREMENTS_MACOS_TXT.exists():
+        return REQUIREMENTS_MACOS_TXT
+    return REQUIREMENTS_TXT
+
+
 def install() -> tuple[bool, str]:
     """Install DA3 and Python dependencies into this package directory."""
     try:
@@ -52,6 +60,7 @@ def install() -> tuple[bool, str]:
         DEPS_DA3_DIR.mkdir(parents=True, exist_ok=True)
 
         subprocess.check_call([sys.executable, "-m", "ensurepip", "--upgrade"])
+        requirements_file = selected_requirements_file()
         subprocess.check_call(
             [
                 sys.executable,
@@ -59,7 +68,7 @@ def install() -> tuple[bool, str]:
                 "pip",
                 "install",
                 "-r",
-                os.fspath(REQUIREMENTS_TXT),
+                os.fspath(requirements_file),
                 "--target",
                 os.fspath(DEPS_PUBLIC_DIR),
             ]

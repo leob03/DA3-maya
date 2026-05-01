@@ -34,6 +34,18 @@ _MODEL = None
 _MODEL_NAME = None
 
 
+def get_torch_device():
+    """Choose the best PyTorch device for Maya's current machine."""
+    import torch
+
+    if torch.cuda.is_available():
+        return "cuda"
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
+        return "mps"
+    return "cpu"
+
+
 def get_model_path(model_name: str, model_folder: str | None = None) -> Path:
     folder = Path(model_folder) if model_folder else MODELS_DIR
     return folder / f"{model_name}.safetensors"
@@ -78,6 +90,11 @@ def unload_model() -> None:
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+        elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            try:
+                torch.mps.empty_cache()
+            except Exception:
+                pass
     except Exception:
         pass
 
@@ -103,7 +120,8 @@ def load_model(model_name: str, model_folder: str | None = None):
     da3_model = DepthAnything3(model_name=config_name)
     weights = load_file(os.fspath(path), device="cpu")
     da3_model.load_state_dict(weights, strict=False)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = get_torch_device()
+    print(f"[DA3 Maya] Loading {model_name} on {device}")
     da3_model.to(device)
     da3_model.eval()
 

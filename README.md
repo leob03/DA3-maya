@@ -41,6 +41,16 @@ da3_maya.show()
 4. Pick an image folder.
 5. Click `Generate`.
 
+On Apple Silicon Macs, `Install Dependencies` uses `requirements-macos.txt`
+and the model loader will prefer PyTorch's `mps` backend when it is available.
+This is intended as a test/development path. For Linux or Windows machines with
+NVIDIA GPUs, the default `requirements.txt` keeps the CUDA PyTorch wheel source
+and the model loader will prefer CUDA.
+
+For first Mac tests, use `da3-small` or `da3-base`, a low process resolution,
+and only a few frames. The final CUDA workstation path can use larger models and
+higher resolutions.
+
 ## Current Scope
 
 Implemented:
