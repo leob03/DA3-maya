@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import platform
 import ssl
 import urllib.error
 import urllib.request
@@ -42,6 +43,8 @@ def get_torch_device():
 
     if torch.cuda.is_available():
         return "cuda"
+    if platform.system() == "Darwin" and os.environ.get("DA3_MAYA_USE_MPS") != "1":
+        return "cpu"
     if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
         os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
         return "mps"
