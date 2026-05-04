@@ -211,7 +211,6 @@ def create_point_cloud(
         print(f"[DA3 Maya] Creating point cloud {name} with {len(pts)} points.")
         obj = cmds.particle(p=[tuple(map(float, p)) for p in pts], name=_maya_safe_name(name))[0]
         cmds.parent(obj, group)
-        _try_apply_particle_colors(obj, cols)
         if frame is not None:
             _key_visibility(obj, frame)
         return obj
@@ -250,23 +249,6 @@ def _limit_points(points, colors, max_points):
 
     idx = np.linspace(0, len(points) - 1, max_points, dtype=np.int64)
     return points[idx], colors[idx]
-
-
-def _try_apply_particle_colors(particle: str, colors):
-    from maya import cmds
-
-    try:
-        shape = cmds.listRelatives(particle, shapes=True, fullPath=True)[0]
-        if not cmds.attributeQuery("rgbPP", node=shape, exists=True):
-            cmds.addAttr(shape, longName="rgbPP", dataType="vectorArray")
-        if not cmds.attributeQuery("rgbPP0", node=shape, exists=True):
-            cmds.addAttr(shape, longName="rgbPP0", dataType="vectorArray")
-        # Per-particle authoring through cmds is slow; cap color assignment so the UI
-        # stays responsive for large clouds. Geometry still imports fully.
-        for i, color in enumerate(colors[:50000]):
-            cmds.setParticleAttr(particle, attribute="rgbPP", id=i, vectorValue=tuple(map(float, color[:3])))
-    except Exception as exc:
-        print(f"[DA3 Maya] Could not assign particle colors: {exc}")
 
 
 def create_depth_meshes(

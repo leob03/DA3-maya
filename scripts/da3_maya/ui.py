@@ -53,13 +53,18 @@ def _show_docked():
     if cmds.workspaceControl(WORKSPACE_CONTROL, exists=True):
         cmds.deleteUI(WORKSPACE_CONTROL)
 
-    control = cmds.workspaceControl(
-        WORKSPACE_CONTROL,
-        label="DA3 Maya",
-        retain=False,
-        initialWidth=430,
-        minimumWidth=360,
-    )
+    control_options = {
+        "label": "DA3 Maya",
+        "retain": False,
+        "initialWidth": 430,
+        "minimumWidth": 360,
+        "dockToMainWindow": ("right", True),
+    }
+    try:
+        control = cmds.workspaceControl(WORKSPACE_CONTROL, **control_options)
+    except TypeError:
+        control_options.pop("dockToMainWindow", None)
+        control = cmds.workspaceControl(WORKSPACE_CONTROL, **control_options)
     cmds.setParent(control)
     cmds.scrollLayout(childResizable=True, width=420)
     _build_ui()
