@@ -1,15 +1,6 @@
-"""Maya startup hook for DA3 Maya module installs."""
+"""DA3 Maya module startup hook.
 
-from maya import cmds
-
-
-def _install_da3_maya_ui():
-    try:
-        from da3_maya.startup import install_startup_ui
-
-        install_startup_ui()
-    except Exception as exc:
-        print(f"[DA3 Maya] Startup UI install failed: {exc}")
-
-
-cmds.evalDeferred(_install_da3_maya_ui)
+Intentionally does not create Maya UI during application startup. Some Maya
+setups are sensitive to module-level userSetup.py creating menus, shelves, or
+workspace controls before the main UI is fully settled.
+"""
