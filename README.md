@@ -18,6 +18,19 @@ import da3_maya
 da3_maya.show()
 ```
 
+## Maya Module Install
+
+To avoid running the Script Editor bootstrap every time, install DA3 Maya as a
+user Maya module:
+
+```bash
+cd /path/to/DA3-maya
+/Applications/Autodesk/maya2024/Maya.app/Contents/bin/mayapy install_maya_module.py
+```
+
+Restart Maya. You should get a `DA3 Maya` menu in Maya's main menu bar and a
+`DA3` shelf button.
+
 For a module install, copy or symlink `DA3Maya.mod` into one of Maya's module
 folders and edit the path line to point at this `maya_da3` directory:
 
