@@ -30,7 +30,7 @@ def show():
 
     cmds.frameLayout(label="Dependencies", collapsable=True, collapse=False)
     cmds.columnLayout(adjustableColumn=True, rowSpacing=4)
-    status = cmds.text(label=_dependency_status_label(), align="left")
+    status = cmds.text(label="Dependencies: not checked", align="left")
     cmds.button(label="Check Dependencies", command=lambda *_: _set_status_text(status, _dependency_status_label()))
     cmds.button(label="Install Dependencies", command=lambda *_: _install(status))
     cmds.button(label="Print Latest Install Log Path", command=lambda *_: _print_latest_install_log(status))
