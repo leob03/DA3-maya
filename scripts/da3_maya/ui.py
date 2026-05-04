@@ -15,17 +15,61 @@ from .paths import MODELS_DIR
 
 
 WINDOW = "DA3MayaWindow"
+WORKSPACE_CONTROL = "DA3MayaWorkspaceControl"
 
 
-def show():
+def show(dockable: bool = True):
     from maya import cmds
 
+    if dockable and hasattr(cmds, "workspaceControl"):
+        return _show_docked()
+    return show_floating()
+
+
+def show_floating():
+    from maya import cmds
+
+    if hasattr(cmds, "workspaceControl") and cmds.workspaceControl(WORKSPACE_CONTROL, exists=True):
+        cmds.deleteUI(WORKSPACE_CONTROL)
     if cmds.window(WINDOW, exists=True):
         cmds.deleteUI(WINDOW)
 
     win = cmds.window(WINDOW, title="DA3 Maya", sizeable=True, widthHeight=(420, 620))
     form = cmds.formLayout()
     scroll = cmds.scrollLayout(childResizable=True)
+    _build_ui()
+
+    cmds.setParent(form)
+    cmds.formLayout(form, edit=True, attachForm=[(scroll, "top", 0), (scroll, "left", 0), (scroll, "right", 0), (scroll, "bottom", 0)])
+    cmds.showWindow(win)
+    return win
+
+
+def _show_docked():
+    from maya import cmds
+
+    if cmds.window(WINDOW, exists=True):
+        cmds.deleteUI(WINDOW)
+    if cmds.workspaceControl(WORKSPACE_CONTROL, exists=True):
+        cmds.deleteUI(WORKSPACE_CONTROL)
+
+    control = cmds.workspaceControl(
+        WORKSPACE_CONTROL,
+        label="DA3 Maya",
+        retain=False,
+        initialWidth=430,
+        minimumWidth=360,
+    )
+    cmds.setParent(control)
+    cmds.scrollLayout(childResizable=True, width=420)
+    _build_ui()
+    cmds.setParent("..")
+    return control
+
+
+def _build_ui():
+    from maya import cmds
+
     col = cmds.columnLayout(adjustableColumn=True, rowSpacing=8)
 
     cmds.frameLayout(label="Dependencies", collapsable=True, collapse=False)
@@ -121,11 +165,8 @@ def show():
             status=status,
         ),
     )
-
-    cmds.setParent(form)
-    cmds.formLayout(form, edit=True, attachForm=[(scroll, "top", 0), (scroll, "left", 0), (scroll, "right", 0), (scroll, "bottom", 0)])
-    cmds.showWindow(win)
-    return win
+    cmds.setParent("..")
+    return col
 
 
 def _dependency_status_label() -> str:

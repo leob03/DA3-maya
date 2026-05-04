@@ -36,6 +36,14 @@ import da3_maya
 da3_maya.show()
 ```
 
+`show()` opens DA3 Maya as a docked Maya workspace panel by default. To use the
+older standalone window instead:
+
+```python
+import da3_maya
+da3_maya.show_floating()
+```
+
 The module does not create menu or shelf UI during Maya startup. If you want the
 `DA3 Maya` menu, run this after Maya is fully open:
 

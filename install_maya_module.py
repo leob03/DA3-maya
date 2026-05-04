@@ -33,8 +33,10 @@ def install() -> Path:
 if __name__ == "__main__":
     path = install()
     print(f"Installed DA3 Maya module: {path}")
-    print("Restart Maya, then open DA3 Maya from Script Editor or a Python shelf button:")
+    print("Restart Maya, then open DA3 Maya from Script Editor or a Python shelf button as a docked panel:")
     print("import da3_maya; da3_maya.show()")
+    print("To use the older standalone window:")
+    print("import da3_maya; da3_maya.show_floating()")
     print("Optional, after Maya is fully open, create the DA3 menu with:")
     print("import da3_maya; da3_maya.install_ui()")
     print("To also test shelf creation, run:")
