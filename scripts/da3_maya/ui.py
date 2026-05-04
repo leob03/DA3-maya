@@ -15,18 +15,15 @@ from .paths import MODELS_DIR
 
 
 WINDOW = "DA3MayaWindow"
-WORKSPACE_CONTROL = "DA3MayaWorkspaceControl"
 
 
 def show():
     from maya import cmds
 
-    if cmds.workspaceControl(WORKSPACE_CONTROL, exists=True):
-        cmds.deleteUI(WORKSPACE_CONTROL)
     if cmds.window(WINDOW, exists=True):
         cmds.deleteUI(WINDOW)
 
-    win = cmds.window(WINDOW, title="DA3 Maya", sizeable=True, widthHeight=(430, 640))
+    win = cmds.window(WINDOW, title="DA3 Maya", sizeable=True, widthHeight=(420, 620))
     form = cmds.formLayout()
     scroll = cmds.scrollLayout(childResizable=True)
     col = cmds.columnLayout(adjustableColumn=True, rowSpacing=8)

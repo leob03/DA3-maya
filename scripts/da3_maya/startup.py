@@ -47,7 +47,6 @@ def install_shelf_button():
         label="DA3",
         annotation="Open DA3 Maya",
         image="commandButton.png",
-        sourceType="python",
         command="import da3_maya; da3_maya.show()",
     )
 

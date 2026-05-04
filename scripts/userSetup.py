@@ -1,6 +1,15 @@
-"""DA3 Maya module startup hook.
+"""Maya startup hook for DA3 Maya module installs."""
 
-Kept intentionally empty. Some Maya/macOS setups are sensitive to creating
-menus or shelves from module-level userSetup.py during application startup.
-Use `import da3_maya; da3_maya.show()` or create a shelf button manually.
-"""
+from maya import cmds
+
+
+def _install_da3_maya_ui():
+    try:
+        from da3_maya.startup import install_startup_ui
+
+        install_startup_ui()
+    except Exception as exc:
+        print(f"[DA3 Maya] Startup UI install failed: {exc}")
+
+
+cmds.evalDeferred(_install_da3_maya_ui)
