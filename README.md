@@ -28,8 +28,19 @@ cd /path/to/DA3-maya
 /Applications/Autodesk/maya2024/Maya.app/Contents/bin/mayapy install_maya_module.py
 ```
 
-Restart Maya. You should get a `DA3 Maya` menu in Maya's main menu bar and a
-`DA3` shelf button.
+Restart Maya, then open DA3 Maya from the Script Editor with:
+
+```python
+import da3_maya
+da3_maya.show()
+```
+
+Once that is stable, you can create a Maya shelf button whose Python command is:
+
+```python
+import da3_maya
+da3_maya.show()
+```
 
 For a module install, copy or symlink `DA3Maya.mod` into one of Maya's module
 folders and edit the path line to point at this `maya_da3` directory:
