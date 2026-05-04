@@ -21,20 +21,14 @@ WORKSPACE_CONTROL = "DA3MayaWorkspaceControl"
 def show():
     from maya import cmds
 
-    if cmds.window(WINDOW, exists=True):
-        cmds.deleteUI(WINDOW)
     if cmds.workspaceControl(WORKSPACE_CONTROL, exists=True):
         cmds.deleteUI(WORKSPACE_CONTROL)
+    if cmds.window(WINDOW, exists=True):
+        cmds.deleteUI(WINDOW)
 
-    control = cmds.workspaceControl(
-        WORKSPACE_CONTROL,
-        label="DA3 Maya",
-        retain=False,
-        initialWidth=430,
-        minimumWidth=360,
-    )
-    cmds.setParent(control)
-    scroll = cmds.scrollLayout(childResizable=True, width=420)
+    win = cmds.window(WINDOW, title="DA3 Maya", sizeable=True, widthHeight=(430, 640))
+    form = cmds.formLayout()
+    scroll = cmds.scrollLayout(childResizable=True)
     col = cmds.columnLayout(adjustableColumn=True, rowSpacing=8)
 
     cmds.frameLayout(label="Dependencies", collapsable=True, collapse=False)
@@ -131,9 +125,10 @@ def show():
         ),
     )
 
-    cmds.setParent("..")
-    cmds.workspaceControl(WORKSPACE_CONTROL, edit=True, restore=True)
-    return control
+    cmds.setParent(form)
+    cmds.formLayout(form, edit=True, attachForm=[(scroll, "top", 0), (scroll, "left", 0), (scroll, "right", 0), (scroll, "bottom", 0)])
+    cmds.showWindow(win)
+    return win
 
 
 def _dependency_status_label() -> str:
