@@ -29,8 +29,7 @@ def show(dockable: bool = True):
 def show_floating():
     from maya import cmds
 
-    if hasattr(cmds, "workspaceControl") and cmds.workspaceControl(WORKSPACE_CONTROL, exists=True):
-        cmds.deleteUI(WORKSPACE_CONTROL)
+    _delete_workspace_control()
     if cmds.window(WINDOW, exists=True):
         cmds.deleteUI(WINDOW)
 
@@ -50,8 +49,7 @@ def _show_docked():
 
     if cmds.window(WINDOW, exists=True):
         cmds.deleteUI(WINDOW)
-    if cmds.workspaceControl(WORKSPACE_CONTROL, exists=True):
-        cmds.deleteUI(WORKSPACE_CONTROL)
+    _delete_workspace_control()
 
     control_options = {
         "label": "DA3 Maya",
@@ -70,6 +68,23 @@ def _show_docked():
     _build_ui()
     cmds.setParent("..")
     return control
+
+
+def _delete_workspace_control():
+    from maya import cmds
+
+    if not hasattr(cmds, "workspaceControl"):
+        return
+
+    if cmds.workspaceControl(WORKSPACE_CONTROL, exists=True):
+        cmds.deleteUI(WORKSPACE_CONTROL)
+
+    if hasattr(cmds, "workspaceControlState"):
+        try:
+            if cmds.workspaceControlState(WORKSPACE_CONTROL, exists=True):
+                cmds.workspaceControlState(WORKSPACE_CONTROL, remove=True)
+        except Exception as exc:
+            print(f"[DA3 Maya] Could not remove saved workspace state: {exc}")
 
 
 def _build_ui():
