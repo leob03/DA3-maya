@@ -17,7 +17,7 @@ def install_menu():
     from maya import cmds, mel
 
     if cmds.menu(MENU_NAME, exists=True):
-        cmds.deleteUI(MENU_NAME, menu=True)
+        return MENU_NAME
 
     main_window = mel.eval("$tmp = $gMainWindow")
     menu = cmds.menu(MENU_NAME, label="DA3 Maya", parent=main_window, tearOff=True)
@@ -40,7 +40,13 @@ def install_shelf_button():
 
     for child in cmds.shelfLayout(SHELF_NAME, query=True, childArray=True) or []:
         if cmds.shelfButton(child, query=True, annotation=True) == "Open DA3 Maya":
-            cmds.deleteUI(child)
+            cmds.shelfButton(
+                child,
+                edit=True,
+                sourceType="python",
+                command="import da3_maya; da3_maya.show()",
+            )
+            return child
 
     return cmds.shelfButton(
         parent=SHELF_NAME,
@@ -52,9 +58,10 @@ def install_shelf_button():
     )
 
 
-def install_startup_ui():
-    install_menu()
-    install_shelf_button()
+def install_startup_ui(include_shelf: bool = False):
+    menu = install_menu()
+    shelf_button = install_shelf_button() if include_shelf else None
+    return menu, shelf_button
 
 
 def _unload_model():

@@ -35,5 +35,7 @@ if __name__ == "__main__":
     print(f"Installed DA3 Maya module: {path}")
     print("Restart Maya, then open DA3 Maya from Script Editor or a Python shelf button:")
     print("import da3_maya; da3_maya.show()")
-    print("Optional, after Maya is fully open, create the DA3 menu and shelf button with:")
+    print("Optional, after Maya is fully open, create the DA3 menu with:")
     print("import da3_maya; da3_maya.install_ui()")
+    print("To also test shelf creation, run:")
+    print("import da3_maya; da3_maya.install_ui(include_shelf=True)")

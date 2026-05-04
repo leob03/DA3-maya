@@ -37,11 +37,19 @@ da3_maya.show()
 ```
 
 The module does not create menu or shelf UI during Maya startup. If you want the
-`DA3 Maya` menu and `DA3` shelf button, run this after Maya is fully open:
+`DA3 Maya` menu, run this after Maya is fully open:
 
 ```python
 import da3_maya
 da3_maya.install_ui()
+```
+
+Shelf creation is intentionally opt-in because some Maya setups are sensitive to
+shelf edits from scripts. To test it separately:
+
+```python
+import da3_maya
+da3_maya.install_ui(include_shelf=True)
 ```
 
 For a module install, copy or symlink `DA3Maya.mod` into one of Maya's module
