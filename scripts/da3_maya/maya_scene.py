@@ -303,13 +303,16 @@ def create_depth_meshes(
 
         mesh_fn = om.MFnMesh()
         mesh_fn.create(mesh_points, face_counts, face_connects)
+        _assign_mesh_uvs(mesh_fn, used_vertices, used_faces, remap, width, height)
         base_name = f"Mesh_{i:04d}"
         frame = i + 1
+        image_path = None
         if i < len(image_paths):
             from .processing import frame_number_from_path
 
             base_name = os.path.splitext(os.path.basename(image_paths[i]))[0]
             frame = frame_number_from_path(image_paths[i], i)
+            image_path = image_paths[i]
         shape_path = mesh_fn.fullPathName()
         parent_nodes = cmds.listRelatives(shape_path, parent=True, fullPath=True) or []
         node = parent_nodes[0] if parent_nodes else shape_path
@@ -324,10 +327,87 @@ def create_depth_meshes(
         except Exception as exc:
             print(f"[DA3 Maya] Could not assign mesh vertex colors: {exc}")
 
+        if image_path:
+            _apply_image_material(node, image_path)
+
         if per_frame:
             _key_visibility(node, frame)
         made.append(node)
     return made
+
+
+def _assign_mesh_uvs(mesh_fn, used_vertices, used_faces, remap, width: int, height: int):
+    try:
+        u_values = []
+        v_values = []
+        denom_u = max(1, width - 1)
+        denom_v = max(1, height - 1)
+        for vertex_index in used_vertices:
+            row = int(vertex_index) // width
+            col = int(vertex_index) % width
+            u_values.append(float(col) / denom_u)
+            v_values.append(1.0 - (float(row) / denom_v))
+
+        uv_ids = remap[used_faces].reshape(-1).astype(int).tolist()
+        uv_counts = [4] * len(used_faces)
+        mesh_fn.setUVs(u_values, v_values, "map1")
+        mesh_fn.assignUVs(uv_counts, uv_ids, "map1")
+    except Exception as exc:
+        print(f"[DA3 Maya] Could not assign mesh UVs: {exc}")
+
+
+def _apply_image_material(node: str, image_path: str):
+    from maya import cmds
+
+    if not image_path or not os.path.exists(image_path):
+        return
+
+    material_name = _maya_safe_name(f"DA3_{os.path.splitext(os.path.basename(image_path))[0]}_mat")
+    shading_group = f"{material_name}SG"
+    file_node = f"{material_name}_file"
+    place_node = f"{material_name}_place2d"
+
+    if not cmds.objExists(material_name):
+        material = cmds.shadingNode("lambert", asShader=True, name=material_name)
+        shading_group = cmds.sets(renderable=True, noSurfaceShader=True, empty=True, name=shading_group)
+        cmds.connectAttr(f"{material}.outColor", f"{shading_group}.surfaceShader", force=True)
+    else:
+        material = material_name
+        if not cmds.objExists(shading_group):
+            shading_group = cmds.sets(renderable=True, noSurfaceShader=True, empty=True, name=shading_group)
+            cmds.connectAttr(f"{material}.outColor", f"{shading_group}.surfaceShader", force=True)
+
+    if not cmds.objExists(file_node):
+        file_node = cmds.shadingNode("file", asTexture=True, isColorManaged=True, name=file_node)
+        place_node = cmds.shadingNode("place2dTexture", asUtility=True, name=place_node)
+        for src, dst in (
+            ("coverage", "coverage"),
+            ("translateFrame", "translateFrame"),
+            ("rotateFrame", "rotateFrame"),
+            ("mirrorU", "mirrorU"),
+            ("mirrorV", "mirrorV"),
+            ("stagger", "stagger"),
+            ("wrapU", "wrapU"),
+            ("wrapV", "wrapV"),
+            ("repeatUV", "repeatUV"),
+            ("offset", "offset"),
+            ("rotateUV", "rotateUV"),
+            ("noiseUV", "noiseUV"),
+            ("vertexUvOne", "vertexUvOne"),
+            ("vertexUvTwo", "vertexUvTwo"),
+            ("vertexUvThree", "vertexUvThree"),
+            ("vertexCameraOne", "vertexCameraOne"),
+        ):
+            cmds.connectAttr(f"{place_node}.{src}", f"{file_node}.{dst}", force=True)
+        cmds.connectAttr(f"{place_node}.outUV", f"{file_node}.uvCoord", force=True)
+        cmds.connectAttr(f"{place_node}.outUvFilterSize", f"{file_node}.uvFilterSize", force=True)
+        cmds.connectAttr(f"{file_node}.outColor", f"{material}.color", force=True)
+
+    cmds.setAttr(f"{file_node}.fileTextureName", os.path.abspath(image_path), type="string")
+    try:
+        cmds.sets(node, edit=True, forceElement=shading_group)
+    except Exception as exc:
+        print(f"[DA3 Maya] Could not assign image material: {exc}")
 
 
 def import_prediction(
