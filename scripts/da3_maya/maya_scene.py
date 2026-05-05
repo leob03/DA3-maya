@@ -33,7 +33,11 @@ def _cv_camera_to_maya_matrix(world_to_camera_3x4):
 def _set_transform_matrix(node: str, matrix):
     from maya import cmds
 
-    cmds.xform(node, ws=True, matrix=[float(v) for v in matrix.reshape(-1)])
+    # DA3/numpy matrices use column-vector convention with translation in the
+    # last column. Maya's cmds.xform matrix list expects translation in the last
+    # row, so transpose at the API boundary.
+    maya_matrix = matrix.T
+    cmds.xform(node, ws=True, matrix=[float(v) for v in maya_matrix.reshape(-1)])
 
 
 def _ensure_group(name: str) -> str:
