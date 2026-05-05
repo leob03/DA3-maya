@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 
 MENU_NAME = "DA3MayaMenu"
 SHELF_NAME = "DA3Maya"
+SHELF_ICON = Path(__file__).with_name("icons") / "da3_camera.xpm"
+
+
+def _shelf_icon_path() -> str:
+    return str(SHELF_ICON) if SHELF_ICON.exists() else "commandButton.png"
 
 
 def show_window(*_args):
@@ -43,6 +50,7 @@ def install_shelf_button():
             cmds.shelfButton(
                 child,
                 edit=True,
+                image=_shelf_icon_path(),
                 sourceType="python",
                 command="import da3_maya; da3_maya.show()",
             )
@@ -52,7 +60,7 @@ def install_shelf_button():
         parent=SHELF_NAME,
         label="DA3",
         annotation="Open DA3 Maya",
-        image="commandButton.png",
+        image=_shelf_icon_path(),
         sourceType="python",
         command="import da3_maya; da3_maya.show()",
     )
