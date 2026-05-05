@@ -113,10 +113,7 @@ def prediction_to_dict(prediction, image_paths: list[str] | None = None, filter_
 
 
 def frame_number_from_path(image_path: str, fallback_index: int) -> int:
-    try:
-        return int(Path(image_path).stem) + 1
-    except Exception:
-        return fallback_index + 1
+    return fallback_index + 1
 
 
 def source_stem(input_folder: str) -> str:

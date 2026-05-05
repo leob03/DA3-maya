@@ -123,11 +123,13 @@ def create_cameras(
         )
 
         if animated_camera:
+            cmds.currentTime(frame, edit=True)
             _apply_camera_intrinsics(animated_shape, fx, fy, cx, cy, image_width, image_height)
             _set_transform_matrix(animated_camera, matrix)
-            cmds.setKeyframe(animated_camera, attribute="translate", time=frame)
-            cmds.setKeyframe(animated_camera, attribute="rotate", time=frame)
-            cmds.setKeyframe(animated_shape, attribute="focalLength", time=frame)
+            for attr in ("translateX", "translateY", "translateZ", "rotateX", "rotateY", "rotateZ"):
+                cmds.setKeyframe(animated_camera, attribute=attr, time=frame)
+            for attr in ("focalLength", "horizontalFilmOffset", "verticalFilmOffset"):
+                cmds.setKeyframe(animated_shape, attribute=attr, time=frame)
 
         if animate_sequence and not keep_individual_cameras:
             cmds.delete(cam)
@@ -136,7 +138,10 @@ def create_cameras(
         cmds.lookThru(animated_camera)
 
     if records:
-        cmds.playbackOptions(minTime=min(r["frame"] for r in records), maxTime=max(r["frame"] for r in records))
+        start = min(r["frame"] for r in records)
+        end = max(r["frame"] for r in records)
+        cmds.playbackOptions(minTime=start, maxTime=end)
+        cmds.currentTime(start, edit=True)
         _write_intrinsics(records, image_width, image_height, output_path, source_name)
 
     return animated_camera
